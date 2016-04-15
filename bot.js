@@ -12,22 +12,38 @@ console.log(wolfram);
 
 var isInConvo = false;
 
+Audio.Load();
+
 Commands.push({cmd:"!list", run:list, desc: "List All Commands"});
 Commands.push({cmd:"!link", run:sendInviteLink, desc: "Get Bot Join Link"});
 Commands.push({cmd:"!stop", run:stopAudio, desc: "Stop Current Audio"});
 Commands.push({cmd:"!avatar", run:setAvater, desc:"Set Bot Avatar"});
 Commands.push({cmd:"!test", run:test, desc:"Test Bot"});
 Commands.push({cmd:"!leave", run:leaveVoice, desc:"Leave Audio"});
+Commands.push({cmd:"!yt", run:ytPlay, desc:"Leave Audio"});
 
+Commands.push({cmd:"[Question]", run:ytPlay, desc:"Type A Question"});
 Phrases.push({cmd: "How are you?", run:convoFeeling});
 Phrases.push({cmd: "Whats wrong?", run:convoFeeling});
 Phrases.push({cmd: "Are you ok?", run:convoFeeling});
 Phrases.push({cmd: "You feeling good?", run:convoFeeling});
+Phrases.push({cmd: "Why?", run:convoWhy});
+var AllChat = [];
 
 var mybot = new Discord.Client();
 mybot.loginWithToken("MTcwMDIwODA3MTk4NjM4MDgw.CfCntw.lUVQYtFJ-Jh2flq0-TXRUImjkZw");
 
 var currentVoice = "";
+
+
+var YoutubeMp3Downloader = require('youtube-mp3-downloader');
+var YD = new YoutubeMp3Downloader({
+    "ffmpegPath": "./libmeg/bin/ffmpeg.exe",        // Where is the FFmpeg binary located?
+    "outputPath": "./audio/",    // Where should the downloaded and encoded files be stored?
+    "youtubeVideoQuality": "highest",       // What video quality should be used?
+    "queueParallelism": 2,                  // How many parallel downloads/encodes should be started?
+    "progressTimeout": 1000                 // How long should be the interval of the progress reports
+});
 
 Audio.OnComplete = function(){
   console.log("COMPLETE AUDIO LOAD");
@@ -38,6 +54,14 @@ Audio.OnComplete = function(){
       run: playAudio,
       desc: "Play Audio: " + Audio.AudioFiles[i].name
     };
+
+    for (var i = 0; i < Commands.length; i++) {
+      var currentCMD = Commands[i];
+      if(newCommand.cmd == currentCMD){
+        console.log("SKIPIING!!");
+        return;
+      }
+    }
 
     Commands.push(newCommand);
   }
@@ -51,16 +75,20 @@ mybot.on("ready", function(){
 mybot.on("message", function(message){
   var channel = message.channel;
   console.log("[OnMessage] Got Message: " + message.content + " in "+ channel);
-  runCommand(message, channel);
+  if(message.author != mybot.user){
+    runCommand(message, channel);
+  }
 
   if(message.content.includes("[Question]")){
     var question = message.content.substring(message.content.indexOf(" ") + 1,message.content.length);
     console.log("question: " + question);
     runQuestion(message, question);
+    return;
   }
 
   if(isInConvo){
     Conversation(message);
+    return;
   }
   if(message.isMentioned(mybot.user)){
 
@@ -72,10 +100,11 @@ mybot.on("message", function(message){
         isInConvo = true;
         mybot.sendMessage(message.channel, Learn.getGreeting().msg);
       }
+      return;
   }
 
-
-
+  console.log(AllChat);
+  AllChat.push(message.content);
 
 });
 
@@ -96,8 +125,7 @@ mybot.on("voiceLeave", function(channel, user){
 function runCommand(cmd, server) {
   for (var i = 0; i < Commands.length; i++) {
     var currentCMD = Commands[i];
-
-    if(currentCMD.cmd.includes(cmd)){
+    if(cmd.content.includes(currentCMD.cmd)){
       currentCMD.run(cmd, server);
     }
   }
@@ -173,6 +201,12 @@ function convoFeeling(message) {
   mybot.sendMessage(message.channel, "Im " + Learn.getCurrentFeeling().feeling);
 }
 
+function convoWhy(message) {
+  var Reason = AllChat[Math.round(random(0, AllChat.length))];
+
+  mybot.sendMessage(message.channel, "Because '"+Reason+"'");
+}
+
 function runQuestion(message, question) {
   var text = '```';
   wolfram.query(question, function (err, result) {
@@ -183,6 +217,62 @@ function runQuestion(message, question) {
     }
     text = text + '```'
     mybot.sendMessage(message.channel, text);
+  });
+
+}
+
+
+//Configure YoutubeMp3Downloader with your settings
+
+function random (low, high) {
+    return Math.random() * (high - low) + low;
+}
+function ytPlay(cmd, channel) {
+  var progressMessage;
+  var messageSent = false;
+  var msg = cmd.content;
+  var firstSpace =msg.indexOf(" ");
+  var link = msg.substring(firstSpace + 1, msg.indexOf(" ", firstSpace + 1));
+  var file = msg.substring(msg.indexOf(" ",msg.indexOf(link)) + 1,cmd.content.length);
+  console.log(link);
+  YD.download(link, file + ".mp3");
+
+  console.log(link);
+  console.log(file);
+
+
+  mybot.sendMessage(channel, "``` YT CODE: "+link+" File: "+file+"```" );
+  mybot.sendMessage(channel, "``` Downloading... ```", function(err, sent) {
+    progressMessage = sent;
+    console.log(err);
+    messageSent = true;
+
+  });
+
+  YD.on("finished", function(data) {
+      mybot.updateMessage(progressMessage, "``` Finished. Use '!play "+file+"'```" );
+      Audio.Load();
+  });
+
+  YD.on("error", function(error) {
+  });
+
+  YD.on("progress", function(progress) {
+    if(!progress.progress.percentage == 100){
+      mybot.updateMessage(progressMessage, progress.progress.percentag);
+    }
+
+  });
+
+  //Download video and save as MP3 file
+
+
+
+  mybot.voiceConnection.playFile("./file", 1, function(err) {
+    if (err) {
+      console.log(err)
+    }
+    console.log("PLAYING!");
   });
 
 }

@@ -1,15 +1,17 @@
-var walk = require('walk'),
-  fs = require('fs'),
-  path = require('path'),
-  walker = walk.walk("./audio", {
-    followLinks: false
-  });
-var Clips = [];
-walker.on("file", fileHandler);
-walker.on("errors", errorsHandler); // plural
-walker.on("end", endHandler);
-var OnComplete;
+var walk =  require('walk'),fs = require('fs'),
+path = require('path')
+function Load() {
+    var walker = walk.walk("./audio", {
+      followLinks: false
+    });
 
+  walker.on("file", fileHandler);
+  walker.on("errors", errorsHandler); // plural
+  walker.on("end", endHandler);
+
+}
+  var Clips = [];
+var OnComplete;
 function fileHandler(root, fileStat, next) {
   fs.readFile(path.resolve(root, fileStat.name), function(buffer) {
     console.log("[Files] Loading: " + fileStat.name);
@@ -42,6 +44,6 @@ function endHandler() {
 
 }
 
-
+module.exports.Load = Load;
 module.exports.AudioFiles = Clips;
 module.exports.OnComplete = OnComplete;
