@@ -6,6 +6,10 @@ var fs = require('fs');
 var Commands = [];
 var Phrases = [];
 
+var wolfram = require('wolfram-alpha').createClient("L7GEPP-V87J3T9WL6", {});
+
+console.log(wolfram);
+
 var isInConvo = false;
 
 Commands.push({cmd:"!list", run:list, desc: "List All Commands"});
@@ -50,6 +54,10 @@ mybot.on("message", function(message){
   runCommand(message, channel);
   if(message.isMentioned(mybot.user)){
     console.log("Bot Refrenced!");
+    var question = message.content.substring(message.content.indexOf(" ") + 1,message.content.length);
+    console.log("question: " + question);
+    runQuestion(message, question);
+    /*
     if(message.content.includes("bye")){
       isInConvo = false;
       mybot.sendMessage(channel, "Bye :(");
@@ -57,6 +65,7 @@ mybot.on("message", function(message){
       isInConvo = true;
       mybot.sendMessage(message.channel, Learn.getGreeting().msg);
     }
+    */
   }
 
   if(isInConvo){
@@ -83,7 +92,7 @@ mybot.on("voiceLeave", function(channel, user){
 function runCommand(cmd, server) {
   for (var i = 0; i < Commands.length; i++) {
     var currentCMD = Commands[i];
-    console.log(currentCMD);
+
     if(currentCMD.cmd.includes(cmd)){
       currentCMD.run(cmd, server);
     }
@@ -158,4 +167,18 @@ function Conversation(message) {
 }
 function convoFeeling(message) {
   mybot.sendMessage(message.channel, "Im " + Learn.getCurrentFeeling().feeling);
+}
+
+function runQuestion(message, question) {
+  var text = '```';
+  wolfram.query(question, function (err, result) {
+    if (err) throw err;
+    for (var i = 0; i < result.length; i++) {
+        //console.log();
+        text = text + result[i].subpods[0].text + '\n'
+    }
+    text = text + '```'
+    mybot.sendMessage(message.channel, text);
+  });
+
 }
