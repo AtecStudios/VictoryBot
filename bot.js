@@ -52,20 +52,23 @@ mybot.on("message", function(message){
   var channel = message.channel;
   console.log("[OnMessage] Got Message: " + message.content + " in "+ channel);
   runCommand(message, channel);
-  if(message.isMentioned(mybot.user)){
-    console.log("Bot Refrenced!");
+
+  if(message.content.includes("[Question]")){
     var question = message.content.substring(message.content.indexOf(" ") + 1,message.content.length);
     console.log("question: " + question);
     runQuestion(message, question);
-    /*
-    if(message.content.includes("bye")){
-      isInConvo = false;
-      mybot.sendMessage(channel, "Bye :(");
-    }else{
-      isInConvo = true;
-      mybot.sendMessage(message.channel, Learn.getGreeting().msg);
-    }
-    */
+  }
+
+
+  if(message.isMentioned(mybot.user)){
+    console.log("Bot Refrenced!");
+      if(message.content.includes("bye")){
+        isInConvo = false;
+        mybot.sendMessage(channel, "Bye :(");
+      }else{
+        isInConvo = true;
+        mybot.sendMessage(message.channel, Learn.getGreeting().msg);
+      }
   }
 
   if(isInConvo){
