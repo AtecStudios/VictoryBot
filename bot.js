@@ -15,12 +15,14 @@ Commands.push({cmd:"!leave", run:leaveVoice, desc:"Leave Audio"});
 var mybot = new Discord.Client();
 mybot.loginWithToken("MTcwMDIwODA3MTk4NjM4MDgw.CfCntw.lUVQYtFJ-Jh2flq0-TXRUImjkZw");
 
+var currentVoice = "";
+
 Audio.OnComplete = function(){
   console.log("COMPLETE AUDIO LOAD");
   for (var i = 0; i < Audio.AudioFiles.length; i++) {
     var Current = Audio.AudioFiles[i];
     var newCommand = {
-      cmd: Current.command,
+      cmd: "!play " + Current.name,
       run: playAudio,
       desc: "Play Audio: " + Audio.AudioFiles[i].name
     };
@@ -43,12 +45,13 @@ mybot.on("message", function(message){
 mybot.on("voiceJoin", function(channel, user){
   if(user.username == "VictoryForPhil"){
     mybot.joinVoiceChannel(channel);
+    currentVoice = channel;
   }
 });
 
 mybot.on("voiceLeave", function(channel, user){
   if(user.username == "VictoryForPhil"){
-    leaveAudio(channel);
+    leaveVoice(channel);
   }
 });
 
@@ -63,13 +66,14 @@ function runCommand(cmd, server) {
   }
 }
 
-function playAudio(cmd) {
+function playAudio(cmd, channel) {
   for (var i = 0; i < Audio.AudioFiles.length; i++) {
       var clip = Audio.AudioFiles[i];
-      if(cmd == clip.command){
+      if(cmd == "!play "+clip.name){
         console.log("Playing Audio");
         console.log(clip);
         mybot.voiceConnections[0].playFile("./audio/" + clip.file, 1);
+        mybot.sendMessage(channel, "```Playing: "+clip.name+" ```");
       }
     }
 }
@@ -83,12 +87,13 @@ function list(cmd, server) {
   mybot.sendMessage(server,final);
 
 }
-function stopAudio(cmd) {
+function stopAudio(cmd, channel) {
   mybot.voiceConnection.stopPlaying();
+  mybot.sendMessage(channel, "```Stoped Audio! ```");
 }
 
 function sendInviteLink(cmd, channel) {
-  mybot.sendMessage(channel, "Click Me: https://discordapp.com/oauth2/authorize?&client_id=170020780174737408&scope=bot&permissions=0")
+  mybot.sendMessage(channel, "https://discordapp.com/oauth2/authorize?&client_id=170020780174737408&scope=bot&permissions=0")
 }
 
 function setAvater() {
@@ -105,15 +110,16 @@ function setAvater() {
          console.log(err);
        }
        console.log("Set Avatar");
+       mybot.sendMessage(channel, "```Set Avatar! ```");
      });
 
   });
 
 }
 function test(cmd, channel) {
-  mybot.sendMessage(channel, "Test!");
+  mybot.sendMessage(channel, "```Test! ```");
 }
 
 function leaveVoice(cmd, channel) {
-  mybot.leaveVoiceChannel(channel);
+  mybot.leaveVoiceChannel(currentVoice);
 }
