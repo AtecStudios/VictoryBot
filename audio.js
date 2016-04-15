@@ -9,6 +9,7 @@ walker.on("file", fileHandler);
 walker.on("errors", errorsHandler); // plural
 walker.on("end", endHandler);
 var OnComplete;
+
 function fileHandler(root, fileStat, next) {
   fs.readFile(path.resolve(root, fileStat.name), function(buffer) {
     console.log("[Files] Loading: " + fileStat.name);

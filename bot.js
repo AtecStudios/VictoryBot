@@ -4,6 +4,9 @@ var Audio = require('./audio.js');
 var fs = require('fs');
 
 var Commands = [];
+var Phrases = [];
+
+var isInConvo = false;
 
 Commands.push({cmd:"!list", run:list, desc: "List All Commands"});
 Commands.push({cmd:"!link", run:sendInviteLink, desc: "Get Bot Join Link"});
@@ -11,6 +14,11 @@ Commands.push({cmd:"!stop", run:stopAudio, desc: "Stop Current Audio"});
 Commands.push({cmd:"!avatar", run:setAvater, desc:"Set Bot Avatar"});
 Commands.push({cmd:"!test", run:test, desc:"Test Bot"});
 Commands.push({cmd:"!leave", run:leaveVoice, desc:"Leave Audio"});
+
+Phrases.push({cmd: "How are you?", run:convoFeeling});
+Phrases.push({cmd: "Whats wrong?", run:convoFeeling});
+Phrases.push({cmd: "Are you ok?", run:convoFeeling});
+Phrases.push({cmd: "You feeling good?", run:convoFeeling});
 
 var mybot = new Discord.Client();
 mybot.loginWithToken("MTcwMDIwODA3MTk4NjM4MDgw.CfCntw.lUVQYtFJ-Jh2flq0-TXRUImjkZw");
@@ -40,6 +48,22 @@ mybot.on("message", function(message){
   var channel = message.channel;
   console.log("[OnMessage] Got Message: " + message.content + " in "+ channel);
   runCommand(message, channel);
+  if(message.isMentioned(mybot.user)){
+    console.log("Bot Refrenced!");
+    if(message.content.includes("bye")){
+      isInConvo = false;
+      mybot.sendMessage(channel, "Bye :(");
+    }else{
+      isInConvo = true;
+      mybot.sendMessage(message.channel, Learn.getGreeting().msg);
+    }
+  }
+
+  if(isInConvo){
+    Conversation(message);
+  }
+
+
 });
 
 mybot.on("voiceJoin", function(channel, user){
@@ -122,4 +146,16 @@ function test(cmd, channel) {
 
 function leaveVoice(cmd, channel) {
   mybot.leaveVoiceChannel(currentVoice);
+}
+
+function Conversation(message) {
+  for (var i = 0; i < Phrases.length; i++) {
+    var current = Phrases[i];
+    if(current.cmd == message.content){
+      current.run(message);
+    }
+  }
+}
+function convoFeeling(message) {
+  mybot.sendMessage(message.channel, "Im " + Learn.getCurrentFeeling().feeling);
 }
