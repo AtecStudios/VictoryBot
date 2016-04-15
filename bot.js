@@ -59,8 +59,11 @@ mybot.on("message", function(message){
     runQuestion(message, question);
   }
 
-
+  if(isInConvo){
+    Conversation(message);
+  }
   if(message.isMentioned(mybot.user)){
+
     console.log("Bot Refrenced!");
       if(message.content.includes("bye")){
         isInConvo = false;
@@ -71,9 +74,7 @@ mybot.on("message", function(message){
       }
   }
 
-  if(isInConvo){
-    Conversation(message);
-  }
+
 
 
 });
